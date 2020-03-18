@@ -19,19 +19,65 @@ namespace CPipeline.Runtime
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
-            BeginFrameRendering(context,cameras);
+           BeginFrameRendering(context,cameras);
 
-            BeginCameraRendering(context, cameras[0]);
-
-            context.SetupCameraProperties(cameras[0]);
-            context.DrawSkybox(cameras[0]);
-            context.Submit();
-
-            EndCameraRendering(context, cameras[0]);
-
+           foreach(var camera in cameras)
+            {
+                RenderCamera(context, camera);
+            }
 
             EndFrameRendering(context, cameras);
         }
+
+        static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+
+        protected void RenderCamera(ScriptableRenderContext context, Camera camera)
+        {
+            BeginCameraRendering(context,camera);
+
+            //setup camera
+            context.SetupCameraProperties(camera);
+
+            //draw skybox
+            context.DrawSkybox(camera);
+
+
+            //culling
+            ScriptableCullingParameters cullingParams;
+            camera.TryGetCullingParameters(out cullingParams);
+
+            var cullResult = context.Cull(ref cullingParams);
+
+
+
+            //draw geo
+
+            SortingSettings sortSetting = new SortingSettings(camera);
+            DrawingSettings drawSetting = new DrawingSettings(unlitShaderTagId, sortSetting);
+            FilteringSettings filteringSeting = new FilteringSettings(RenderQueueRange.all);
+
+
+            context.DrawRenderers(cullResult, ref drawSetting, ref filteringSeting);
+            
+            
+
+
+
+            //render unlit
+
+
+
+
+
+
+
+
+
+            context.Submit();
+
+            EndCameraRendering(context,camera);
+        }
+
 
     }
 }
