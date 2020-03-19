@@ -99,16 +99,14 @@ namespace CPipeline.Runtime
             EndCameraRendering(context,camera);
         }
 
-        Vector4[] lightColors = new Vector4[4];
-        Vector4[] lightDirection = new Vector4[4];
+        Vector4[] lightColors = new Vector4[8];
+        Vector4[] lightDirection = new Vector4[8];
         static int ids = Shader.PropertyToID("_lightColors");
         public void SetupLight(ScriptableRenderContext context,ref CullingResults cullResults)
         {
 
             NativeArray<VisibleLight> lights = cullResults.visibleLights;
 
-
-           
 
             cmd.SetGlobalFloat("_lightLength", lights.Length);
             for(int i = 0; i < lights.Length; i++)
@@ -117,7 +115,7 @@ namespace CPipeline.Runtime
                 lightDirection[i] = lights[i].localToWorldMatrix.GetColumn(2);
             }
 
-            Shader.SetGlobalVectorArray(ids, lightColors);
+            Shader.SetGlobalVectorArray(ids, lightColors); 
             Shader.SetGlobalVectorArray("_lightDirection", lightDirection);
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();

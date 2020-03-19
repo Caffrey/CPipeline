@@ -33,13 +33,12 @@
                 float4 vertex : SV_POSITION;
             };
 
-            CBUFFER_START(UnityPerDraw)
                 float4 unity_LightData;
                 float4 unity_LightIndices[2];
-            CBUFFER_END
 
 
-#define MAX_VISIBLE_LIGHTS 4
+
+#define MAX_VISIBLE_LIGHTS 8
             float _lightLength;
             float4 _lightColors[MAX_VISIBLE_LIGHTS];
             float4 _lightDirection[MAX_VISIBLE_LIGHTS];
