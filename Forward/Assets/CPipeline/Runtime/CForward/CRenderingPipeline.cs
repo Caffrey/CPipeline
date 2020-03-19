@@ -4,14 +4,11 @@ using UnityEngine.Rendering;
 
 namespace CPipeline.Runtime
 {
-
-
-
     //TODO 
     /*
      * 0.RENDERING UNLIT  OK
      * 0.RENDERING LIT 
-     * 
+     * mutlip light now SetGlobalVectorArray
      * 1.RENDERING OP OK 
      * 2.RENDERING TRANSPARENT OK
      * 3.BASIC RENDERING SHADER LIB
@@ -48,7 +45,7 @@ namespace CPipeline.Runtime
             cmd.Clear();
             cmd.ClearRenderTarget(true, true, Color.clear);
             context.ExecuteCommandBuffer(cmd);
-
+            cmd.Clear();
             //setup camera
             context.SetupCameraProperties(camera);
 
@@ -62,7 +59,7 @@ namespace CPipeline.Runtime
             var cullResult = context.Cull(ref cullingParams);
 
             //setup light
-            SetupLight(ref cullResult);
+            SetupLight(context, ref cullResult);
 
 
 
@@ -91,19 +88,25 @@ namespace CPipeline.Runtime
 
             //render unlit
 
+            if (camera.cameraType == CameraType.SceneView) 
+            {
+                context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
+            }
+
 
             context.Submit();
 
             EndCameraRendering(context,camera);
         }
 
-        public void SetupLight(ref CullingResults cullResults)
+        Vector4[] lightColors = new Vector4[4];
+        Vector4[] lightDirection = new Vector4[4];
+        static int ids = Shader.PropertyToID("_lightColors");
+        public void SetupLight(ScriptableRenderContext context,ref CullingResults cullResults)
         {
 
             NativeArray<VisibleLight> lights = cullResults.visibleLights;
 
-            Vector4[] lightColors = new Vector4[lights.Length];
-            Vector4[] lightDirection = new Vector4[lights.Length];
 
            
 
@@ -113,9 +116,12 @@ namespace CPipeline.Runtime
                 lightColors[i] = lights[i].finalColor;
                 lightDirection[i] = lights[i].localToWorldMatrix.GetColumn(2);
             }
-           
-            cmd.SetGlobalVectorArray("_lightColors", lightColors);
-            cmd.SetGlobalVectorArray("_lightDirection", lightDirection);
+
+            Shader.SetGlobalVectorArray(ids, lightColors);
+            Shader.SetGlobalVectorArray("_lightDirection", lightDirection);
+            context.ExecuteCommandBuffer(cmd);
+            cmd.Clear();
+            
         }
 
     }

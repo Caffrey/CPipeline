@@ -33,9 +33,19 @@
                 float4 vertex : SV_POSITION;
             };
 
+            CBUFFER_START(UnityPerDraw)
+                float4 unity_LightData;
+                float4 unity_LightIndices[2];
+            CBUFFER_END
+
+
+#define MAX_VISIBLE_LIGHTS 4
             float _lightLength;
-            float4 _lightColors[2];
-            float4  lightDirection[2];
+            float4 _lightColors[MAX_VISIBLE_LIGHTS];
+            float4 _lightDirection[MAX_VISIBLE_LIGHTS];
+
+            float4 unity_PerObjectLightData;
+            float4 unity_PerObjectLightIndices[2];
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -53,10 +63,16 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
-                fixed4 col = tex2D(_MainTex, i.uv) * _Color * _lightColors[0];
+                fixed4 col = tex2D(_MainTex, i.uv) * _Color ;
+            col *= _lightColors[0] * _lightDirection[0];
+            col *= _lightColors[1] * _lightDirection[1];
+            col *= _lightColors[2] * _lightDirection[2];
+            col.r += _lightLength;
                 // apply fog
+            col.r += unity_LightData.x;
+            col.g += unity_LightIndices[0].x;
                 UNITY_APPLY_FOG(i.fogCoord, col);
-                return _Color;
+                return col;
             }
             ENDHLSL
         }
