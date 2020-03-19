@@ -24,6 +24,7 @@
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float3 normal: NORMAL;
             };
 
             struct v2f
@@ -31,6 +32,7 @@
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
+                float3 normal : TEXCOORD1;
             };
 
                 float4 unity_LightData;
@@ -38,13 +40,11 @@
 
 
 
-#define MAX_VISIBLE_LIGHTS 8
+            #define MAX_VISIBLE_LIGHTS 8
             float _lightLength;
             float4 _lightColors[MAX_VISIBLE_LIGHTS];
             float4 _lightDirection[MAX_VISIBLE_LIGHTS];
 
-            float4 unity_PerObjectLightData;
-            float4 unity_PerObjectLightIndices[2];
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -55,7 +55,8 @@
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                UNITY_TRANSFER_FOG(o,o.vertex);
+                UNITY_TRANSFER_FOG(o,o.vertex); 
+                o.normal = UnityObjectToWorldNormal(v.normal);
                 return o;
             }
 
@@ -63,13 +64,14 @@
             {
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv) * _Color ;
-            col *= _lightColors[0] * _lightDirection[0];
-            col *= _lightColors[1] * _lightDirection[1];
-            col *= _lightColors[2] * _lightDirection[2];
-            col.r += _lightLength;
-                // apply fog
-            col.r += unity_LightData.x;
-            col.g += unity_LightIndices[0].x;
+                col *= max(0, dot(normalize(i.normal), _lightDirection[0])) * _lightColors[0];
+                col += max(0, dot(normalize(i.normal), _lightDirection[1])) * _lightColors[1];
+                col += max(0, dot(normalize(i.normal), _lightDirection[2])) * _lightColors[2];
+                col += max(0, dot(normalize(i.normal), _lightDirection[3])) * _lightColors[3];
+                col += max(0, dot(normalize(i.normal), _lightDirection[4])) * _lightColors[4];
+                col.r += unity_LightData.x;
+                col.g += unity_LightIndices[0].x;
+
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }

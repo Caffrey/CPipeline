@@ -8,7 +8,8 @@ namespace CPipeline.Runtime
     /*
      * 0.RENDERING UNLIT  OK
      * 0.RENDERING LIT 
-     * mutlip light now SetGlobalVectorArray
+     * mutlip light now SetGlobalVectorArray ok
+     * setup perobject light ,direction light ,and point light ,no shadow
      * 1.RENDERING OP OK 
      * 2.RENDERING TRANSPARENT OK
      * 3.BASIC RENDERING SHADER LIB
