@@ -1,4 +1,4 @@
-﻿Shader "Unlit/Unlit"
+﻿Shader "CPipeLine/Lit"
 {
     Properties
     {
@@ -41,14 +41,38 @@
 
 
             #define MAX_VISIBLE_LIGHTS 8
-            float _lightLength;
-            float4 _lightColors[MAX_VISIBLE_LIGHTS];
-            float4 _lightDirection[MAX_VISIBLE_LIGHTS];
+            float c_visible_light_count;
+            half4 c_visible_light_color[MAX_VISIBLE_LIGHTS];
+            half4 c_visible_light_direction[MAX_VISIBLE_LIGHTS];
 
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
             float4 _Color;
+
+
+
+
+            
+            struct LightData
+            {
+                half4 color;
+                half4 direction;
+            };
+
+            LightData GetLight(int index)
+            {
+                LightData o;
+                o.color = c_visible_light_color[index];
+                o.direction = c_visible_light_direction[index];
+                return o;
+            }
+
+            int GetLightIndex(int index)
+            {
+                return unity_LightIndices[index/4][index%4];
+            }
+
 
             v2f vert (appdata v)
             {
@@ -63,17 +87,22 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
-                fixed4 col = tex2D(_MainTex, i.uv) * _Color ;
-                col *= max(0, dot(normalize(i.normal), _lightDirection[0])) * _lightColors[0];
-                col += max(0, dot(normalize(i.normal), _lightDirection[1])) * _lightColors[1];
-                col += max(0, dot(normalize(i.normal), _lightDirection[2])) * _lightColors[2];
-                col += max(0, dot(normalize(i.normal), _lightDirection[3])) * _lightColors[3];
-                col += max(0, dot(normalize(i.normal), _lightDirection[4])) * _lightColors[4];
-                col.r += unity_LightData.x;
-                col.g += unity_LightIndices[0].x;
+                fixed4 albedo = tex2D(_MainTex, i.uv) * _Color ;
+                half4 finalColor = half4(0,0,0,1);
 
-                UNITY_APPLY_FOG(i.fogCoord, col);
-                return col;
+                fixed3 N = normalize(i.normal);
+
+                int lightLen = min(MAX_VISIBLE_LIGHTS,c_visible_light_count);
+                int lightIndex = 0;
+                for(int i = 0; i < lightLen; i++)
+                {
+                    lightIndex = GetLightIndex(i);
+                    LightData lightData = GetLight(lightIndex);
+                    finalColor += max(0,dot(lightData.direction,N)) * lightData.color * albedo;
+                }   
+                
+                UNITY_APPLY_FOG(i.fogCoord, finalColor);
+                return finalColor;
             }
             ENDHLSL
         }

@@ -9,7 +9,9 @@ namespace CPipeline.Runtime
      * 0.RENDERING UNLIT  OK
      * 0.RENDERING LIT 
      * mutlip light now SetGlobalVectorArray ok
-     * setup perobject light ,direction light ,and point light ,no shadow
+     * setup perobject light ,direction light ok
+     * and point light ,no shadow
+     * setup light buffer in shader
      * 1.RENDERING OP OK 
      * 2.RENDERING TRANSPARENT OK
      * 3.BASIC RENDERING SHADER LIB
@@ -22,6 +24,10 @@ namespace CPipeline.Runtime
         {
             name = "SRP"
         };
+
+        CLightData m_lightData = new CLightData();
+
+
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
            BeginFrameRendering(context,cameras);
@@ -60,12 +66,11 @@ namespace CPipeline.Runtime
             var cullResult = context.Cull(ref cullingParams);
 
             //setup light
-            SetupLight(context, ref cullResult);
+            m_lightData.setupLight(context, ref cullResult);
 
 
 
             //draw opaque
-
             SortingSettings opaqueSortSetting = new SortingSettings(camera)
             {
                 criteria = SortingCriteria.CommonOpaque
@@ -98,29 +103,6 @@ namespace CPipeline.Runtime
             context.Submit();
 
             EndCameraRendering(context,camera);
-        }
-
-        Vector4[] lightColors = new Vector4[8];
-        Vector4[] lightDirection = new Vector4[8];
-        static int ids = Shader.PropertyToID("_lightColors");
-        public void SetupLight(ScriptableRenderContext context,ref CullingResults cullResults)
-        {
-
-            NativeArray<VisibleLight> lights = cullResults.visibleLights;
-
-
-            cmd.SetGlobalFloat("_lightLength", lights.Length);
-            for(int i = 0; i < lights.Length; i++)
-            {
-                lightColors[i] = lights[i].finalColor;
-                lightDirection[i] = lights[i].localToWorldMatrix.GetColumn(2);
-            }
-
-            Shader.SetGlobalVectorArray(ids, lightColors); 
-            Shader.SetGlobalVectorArray("_lightDirection", lightDirection);
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
-            
         }
 
     }
