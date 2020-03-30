@@ -76,7 +76,11 @@ namespace CPipeline.Runtime
                 criteria = SortingCriteria.CommonOpaque
             };
 
-            DrawingSettings opaqueDrawSetting = new DrawingSettings(unlitShaderTagId, opaqueSortSetting);
+            DrawingSettings opaqueDrawSetting = new DrawingSettings(unlitShaderTagId, opaqueSortSetting)
+            {
+                perObjectData = PerObjectData.LightIndices
+            };
+           
             FilteringSettings opaqueFilteringSeting = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(cullResult, ref opaqueDrawSetting, ref opaqueFilteringSeting);
