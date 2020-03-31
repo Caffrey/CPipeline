@@ -46,6 +46,7 @@
             half4 c_visible_light_color[MAX_VISIBLE_LIGHTS];
             half4 c_visible_light_direction[MAX_VISIBLE_LIGHTS];
             half4 c_visible_light_attenuation[MAX_VISIBLE_LIGHTS];
+            half4 c_visible_light_spot_direction[MAX_VISIBLE_LIGHTS];
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -66,6 +67,7 @@
                 half4 color;
                 half4 directionOrPosition;
                 half4 attenuation;
+                half4 spotDirection;
             };
 
             LightData GetLight(int index)
@@ -74,6 +76,7 @@
                 o.color = c_visible_light_color[index];
                 o.directionOrPosition = c_visible_light_direction[index];
                 o.attenuation = c_visible_light_attenuation[index];
+                o.spotDirection = c_visible_light_spot_direction[index];
 
                 return o;
             }
@@ -88,6 +91,7 @@
                 //1.direction light direction, W = 0;
                 //2.light position , W =1;
                 half3 lightVector = light.directionOrPosition.xyz - surface.WorldPos * light.directionOrPosition.w;
+                half3 lightDirection = normalize(lightVector);
                 diffuse.rgb = max(0,dot(lightVector,surface.Normal));
 
                 //light attenuation formual :referenece :https://catlikecoding.com/unity/tutorials/scriptable-render-pipeline/lights/
@@ -97,12 +101,20 @@
 
                 float distanceSqr = max(dot(lightVector, lightVector), 0.00001);
 
+                //distance attenuation
                 float rangeFade = distanceSqr * light.attenuation.x;
                 rangeFade = saturate(1.0 - rangeFade*rangeFade);
                 rangeFade *= rangeFade;
 
+                //spot attenuation
+                float spotFade = dot(light.spotDirection.xyz,lightDirection);
+                spotFade = saturate(spotFade*light.attenuation.z + light.attenuation.w);
+                spotFade *=spotFade;
+                
+
+
                 //point light 
-                diffuse.rgb *= rangeFade / distanceSqr;
+                diffuse.rgb *= spotFade * rangeFade / distanceSqr;
 
                 diffuse.rgb *= light.color.rgb; 
 

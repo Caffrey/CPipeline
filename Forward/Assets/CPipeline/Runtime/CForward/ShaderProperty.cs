@@ -13,6 +13,7 @@ namespace CPipeline.Runtime
         public static int VISIBLE_LIGHT_COLOR = Shader.PropertyToID("c_visible_light_color");
         public static int VISIBLE_LIGHT_DIRECTION = Shader.PropertyToID("c_visible_light_direction");
         public static int VISIBLE_LIGHT_ATTENUATION = Shader.PropertyToID("c_visible_light_attenuation");
+        public static int VISIBLE_LIGHT_SPOT_DIRECTION = Shader.PropertyToID("c_visible_light_spot_direction");
 
 
     }

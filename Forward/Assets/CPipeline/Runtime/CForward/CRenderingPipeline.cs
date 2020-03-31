@@ -2,6 +2,10 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace CPipeline.Runtime
 {
     //TODO 
@@ -54,21 +58,49 @@ namespace CPipeline.Runtime
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
             //setup camera
+
             context.SetupCameraProperties(camera);
 
-            //draw skybox
-            context.DrawSkybox(camera);
+
 
             //culling
             ScriptableCullingParameters cullingParams;
             camera.TryGetCullingParameters(out cullingParams);
 
+#if UNITY_EDITOR
+            if (camera.cameraType == CameraType.SceneView)
+            {
+                ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
+            }
+#endif
+
+
+
             var cullResult = context.Cull(ref cullingParams);
+
+#if UNITY_EDITOR
+            RenderGizmo(context, camera, GizmoSubset.PreImageEffects);
+#endif
+
+            RenderObject(context,camera, ref cullResult);
+
+            //draw skybox
+            context.DrawSkybox(camera);
+
+#if UNITY_EDITOR
+            RenderGizmo(context, camera, GizmoSubset.PostImageEffects);
+#endif
+            context.Submit();
+
+            EndCameraRendering(context,camera);
+        }
+
+        void RenderObject(ScriptableRenderContext context, Camera camera , ref CullingResults cullResult)
+        { 
+          
 
             //setup light
             m_lightData.setupLight(context, ref cullResult);
-
-
 
             //draw opaque
             SortingSettings opaqueSortSetting = new SortingSettings(camera)
@@ -80,7 +112,7 @@ namespace CPipeline.Runtime
             {
                 perObjectData = PerObjectData.LightIndices
             };
-           
+
             FilteringSettings opaqueFilteringSeting = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(cullResult, ref opaqueDrawSetting, ref opaqueFilteringSeting);
@@ -96,18 +128,21 @@ namespace CPipeline.Runtime
             FilteringSettings transparentFilteringSeting = new FilteringSettings(RenderQueueRange.transparent);
             context.DrawRenderers(cullResult, ref transparentDrawSetting, ref transparentFilteringSeting);
 
-            //render unlit
 
-            if (camera.cameraType == CameraType.SceneView) 
-            {
-                context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
-            }
-
-
-            context.Submit();
-
-            EndCameraRendering(context,camera);
         }
+
+#if UNITY_EDITOR
+        void RenderGizmo(ScriptableRenderContext context, Camera camera, GizmoSubset type)
+        {
+            if (Handles.ShouldRenderGizmos() ||camera.cameraType == CameraType.SceneView)
+            {
+
+                context.DrawGizmos(camera, type);
+                context.DrawGizmos(camera, type);
+            }
+        }
+
+#endif
 
     }
 }
