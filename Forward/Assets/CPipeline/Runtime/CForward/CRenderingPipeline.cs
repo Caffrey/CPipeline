@@ -24,6 +24,23 @@ namespace CPipeline.Runtime
      */
     public class CRenderingPipeline : RenderPipeline
     {
+        private CPipelineAsset m_PipelineConfig;
+
+
+        #region Pass
+
+        CShadowPass m_ShadowPass;
+
+        #endregion
+
+
+        public CRenderingPipeline(CPipelineAsset asset)
+        {
+            m_PipelineConfig = asset;
+            m_ShadowPass = new CShadowPass();
+        }
+
+
         CommandBuffer cmd = new CommandBuffer
         {
             name = "SRP"
@@ -62,10 +79,14 @@ namespace CPipeline.Runtime
             context.SetupCameraProperties(camera);
 
 
-
             //culling
             ScriptableCullingParameters cullingParams;
             camera.TryGetCullingParameters(out cullingParams);
+            //setup shadow
+            cullingParams.shadowDistance = Mathf.Min(m_PipelineConfig.ShadowSetting.maxDistance,camera.farClipPlane);
+
+            
+
 
 #if UNITY_EDITOR
             if (camera.cameraType == CameraType.SceneView)
@@ -77,6 +98,9 @@ namespace CPipeline.Runtime
 
 
             var cullResult = context.Cull(ref cullingParams);
+
+            // Render Shadow
+            m_ShadowPass.Render(context, camera, ref cullResult);
 
 #if UNITY_EDITOR
             RenderGizmo(context, camera, GizmoSubset.PreImageEffects);

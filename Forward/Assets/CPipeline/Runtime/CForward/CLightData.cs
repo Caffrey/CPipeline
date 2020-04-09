@@ -19,9 +19,20 @@ namespace CPipeline.Runtime
             lightCmd = new CommandBuffer();
         }
 
-
-        public void setupLight(ScriptableRenderContext context, ref CullingResults cullResults)
+        void SetupShadow(Light light, ref CullingResults cullResults,ref CShadowSetting shadowSetting,int visibleLightIndex)
         {
+            if(visibleLightIndex < CShadowPass.MAX_SHADOW_DIRECTIONAL_LIGHT_COUNT 
+                && light.shadows != LightShadows.None && light.shadowStrength > 0f 
+                && cullResults.GetShadowCasterBounds(visibleLightIndex,out Bounds b)
+                )
+            {
+
+            }
+        }
+
+        public void setupLight(ScriptableRenderContext context, ref CullingResults cullResults, ref CShadowSetting shadowSetting)
+        {
+
             NativeArray<VisibleLight> lights = cullResults.visibleLights;
             int lightCount = lights.Length;
             
@@ -32,10 +43,12 @@ namespace CPipeline.Runtime
 
                 if(light.lightType == LightType.Directional)
                 {
+                    
                     lightColors[i] = light.finalColor;                
                     lightDirection[i] = -light.localToWorldMatrix.GetColumn(2);
                     lightColors[i].w = 0;
                     attenuation.w = 1;
+                    SetupShadow(light.light, ref cullResults, ref shadowSetting, i);
                 }
                 else if(light.lightType == LightType.Point || light.lightType == LightType.Spot)
                 {
@@ -61,8 +74,6 @@ namespace CPipeline.Runtime
                         float angleRange = Mathf.Max(cosInner - cosOuter,0.001f);
                         attenuation.z = 1f / angleRange;
                         attenuation.w = -cosOuter * attenuation.z;
-
-
                     }
 
 

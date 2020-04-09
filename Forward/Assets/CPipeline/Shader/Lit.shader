@@ -98,7 +98,6 @@
                 //i / d^2 ---- i : light source intensity, d: distance 
                 //point light range attenuation : (1 - (d^2/r^2)^2)^2 --- equal i from upon formual
 
-
                 float distanceSqr = max(dot(lightVector, lightVector), 0.00001);
 
                 //distance attenuation
@@ -111,8 +110,6 @@
                 spotFade = saturate(spotFade*light.attenuation.z + light.attenuation.w);
                 spotFade *=spotFade;
                 
-
-
                 //point light 
                 diffuse.rgb *= spotFade * rangeFade / distanceSqr;
 
