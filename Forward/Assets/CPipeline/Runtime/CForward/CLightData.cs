@@ -75,8 +75,6 @@ namespace CPipeline.Runtime
                         attenuation.z = 1f / angleRange;
                         attenuation.w = -cosOuter * attenuation.z;
                     }
-
-
                 }
 
 

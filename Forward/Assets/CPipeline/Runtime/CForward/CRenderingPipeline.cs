@@ -8,6 +8,17 @@ using UnityEditor;
 
 namespace CPipeline.Runtime
 {
+    public struct RenderContenxt
+    {
+        public ScriptableRenderContext context;
+        public CPipelineAsset asset;
+        public CommandBuffer cmd;
+        public Camera camera;
+        public CullingResults cullResult;
+    }
+
+
+
     //TODO 
     /*
      * 0.RENDERING UNLIT  OK
@@ -26,7 +37,7 @@ namespace CPipeline.Runtime
     {
         private CPipelineAsset m_PipelineConfig;
 
-
+        RenderContenxt m_RenderContext;
         #region Pass
 
         CShadowPass m_ShadowPass;
@@ -38,6 +49,16 @@ namespace CPipeline.Runtime
         {
             m_PipelineConfig = asset;
             m_ShadowPass = new CShadowPass();
+            m_RenderContext = new RenderContenxt();
+        }
+
+        void SetupRenderContext(ref ScriptableRenderContext context,ref CullingResults cullResult,Camera camera)
+        {
+            m_RenderContext.cmd = cmd;
+            m_RenderContext.asset = m_PipelineConfig;
+            m_RenderContext.camera = camera;
+            m_RenderContext.context = context;
+            m_RenderContext.cullResult = cullResult;
         }
 
 
@@ -70,13 +91,10 @@ namespace CPipeline.Runtime
             {
                 ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
             }
-            cmd.Clear();
-            cmd.ClearRenderTarget(true, true, Color.clear);
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+
+           
             //setup camera
 
-            context.SetupCameraProperties(camera);
 
 
             //culling
@@ -86,8 +104,6 @@ namespace CPipeline.Runtime
             cullingParams.shadowDistance = Mathf.Min(m_PipelineConfig.ShadowSetting.maxDistance,camera.farClipPlane);
 
             
-
-
 #if UNITY_EDITOR
             if (camera.cameraType == CameraType.SceneView)
             {
@@ -95,17 +111,23 @@ namespace CPipeline.Runtime
             }
 #endif
 
+            CullingResults cullResult = context.Cull(ref cullingParams);
+
+            SetupRenderContext(ref context, ref cullResult,camera);
 
 
-            var cullResult = context.Cull(ref cullingParams);
-
-            // Render Shadow
-            m_ShadowPass.Render(context, camera, ref cullResult);
 
 #if UNITY_EDITOR
             RenderGizmo(context, camera, GizmoSubset.PreImageEffects);
 #endif
 
+            RenderShadow(ref m_RenderContext);
+
+            context.SetupCameraProperties(camera);
+            cmd.Clear();
+            cmd.ClearRenderTarget(true, true, Color.clear);
+            context.ExecuteCommandBuffer(cmd);
+            context.Submit();
             RenderObject(context,camera, ref cullResult);
 
             //draw skybox
@@ -114,18 +136,31 @@ namespace CPipeline.Runtime
 #if UNITY_EDITOR
             RenderGizmo(context, camera, GizmoSubset.PostImageEffects);
 #endif
+
+
+            Cleanup(ref m_RenderContext);
             context.Submit();
 
             EndCameraRendering(context,camera);
         }
 
+        void Cleanup(ref RenderContenxt context)
+        {
+            m_ShadowPass.CleanUp(ref context);
+        }
+
+        void RenderShadow(ref RenderContenxt context)
+        {
+
+            //setup light
+            m_lightData.setupLight(context.context, ref context.cullResult, ref m_PipelineConfig.ShadowSetting);
+
+            m_ShadowPass.Render(ref context);
+        }
+
         void RenderObject(ScriptableRenderContext context, Camera camera , ref CullingResults cullResult)
         { 
           
-
-            //setup light
-            m_lightData.setupLight(context, ref cullResult);
-
             //draw opaque
             SortingSettings opaqueSortSetting = new SortingSettings(camera)
             {
