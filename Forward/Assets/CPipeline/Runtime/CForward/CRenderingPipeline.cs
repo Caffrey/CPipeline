@@ -8,17 +8,7 @@ using UnityEditor;
 
 namespace CPipeline.Runtime
 {
-    public struct RenderContenxt
-    {
-        public ScriptableRenderContext context;
-        public CPipelineAsset asset;
-        public CommandBuffer cmd;
-        public Camera camera;
-        public CullingResults cullResult;
-    }
-
-
-
+ 
     //TODO 
     /*
      * 0.RENDERING UNLIT  OK
@@ -37,10 +27,10 @@ namespace CPipeline.Runtime
     {
         private CPipelineAsset m_PipelineConfig;
 
-        RenderContenxt m_RenderContext;
+        RenderingData m_RenderContext;
         #region Pass
 
-        CShadowPass m_ShadowPass;
+        CameraRender m_CameraRender;
 
         #endregion
 
@@ -48,15 +38,15 @@ namespace CPipeline.Runtime
         public CRenderingPipeline(CPipelineAsset asset)
         {
             m_PipelineConfig = asset;
-            m_ShadowPass = new CShadowPass();
-            m_RenderContext = new RenderContenxt();
+            m_RenderContext = new RenderingData();
+            m_CameraRender = new CameraRender();
         }
 
         void SetupRenderContext(ref ScriptableRenderContext context,ref CullingResults cullResult,Camera camera)
         {
             m_RenderContext.cmd = cmd;
             m_RenderContext.asset = m_PipelineConfig;
-            m_RenderContext.camera = camera;
+            m_RenderContext.cameraData.camera = camera;
             m_RenderContext.context = context;
             m_RenderContext.cullResult = cullResult;
         }
@@ -82,10 +72,23 @@ namespace CPipeline.Runtime
             EndFrameRendering(context, cameras);
         }
 
-        static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlits");
+        static ShaderTagId[] unlitShaderTagId = {
+            new ShaderTagId("Always"),
+            new ShaderTagId("OpapeLit"),
+            new ShaderTagId("TransparentLit"),
+            new ShaderTagId("Transparent"),
+            new ShaderTagId("Clip"),
+            new ShaderTagId("VertexLM"),
+            new ShaderTagId("SRPDefaultUnlits")
+        };
 
         protected void RenderCamera(ScriptableRenderContext context, Camera camera)
         {
+            m_CameraRender.Render(context, camera);
+            return;
+
+
+
             BeginCameraRendering(context,camera);
             if(camera.cameraType == CameraType.SceneView)
             {
@@ -144,18 +147,16 @@ namespace CPipeline.Runtime
             EndCameraRendering(context,camera);
         }
 
-        void Cleanup(ref RenderContenxt context)
+        void Cleanup(ref RenderingData context)
         {
-            m_ShadowPass.CleanUp(ref context);
+            m_lightData.Cleanup(ref context);
         }
 
-        void RenderShadow(ref RenderContenxt context)
+        void RenderShadow(ref RenderingData context)
         {
-
             //setup light
             m_lightData.setupLight(context.context, ref context.cullResult, ref m_PipelineConfig.ShadowSetting);
-
-            m_ShadowPass.Render(ref context);
+           // m_lightData.RenderShadow(ref context);
         }
 
         void RenderObject(ScriptableRenderContext context, Camera camera , ref CullingResults cullResult)
@@ -167,7 +168,7 @@ namespace CPipeline.Runtime
                 criteria = SortingCriteria.CommonOpaque
             };
 
-            DrawingSettings opaqueDrawSetting = new DrawingSettings(unlitShaderTagId, opaqueSortSetting)
+            DrawingSettings opaqueDrawSetting = new DrawingSettings(unlitShaderTagId[0], opaqueSortSetting)
             {
                 perObjectData = PerObjectData.LightIndices
             };
@@ -183,7 +184,7 @@ namespace CPipeline.Runtime
                 criteria = SortingCriteria.CommonTransparent
             };
 
-            DrawingSettings transparentDrawSetting = new DrawingSettings(unlitShaderTagId, transparentSortSetting);
+            DrawingSettings transparentDrawSetting = new DrawingSettings(unlitShaderTagId[0], transparentSortSetting);
             FilteringSettings transparentFilteringSeting = new FilteringSettings(RenderQueueRange.transparent);
             context.DrawRenderers(cullResult, ref transparentDrawSetting, ref transparentFilteringSeting);
 

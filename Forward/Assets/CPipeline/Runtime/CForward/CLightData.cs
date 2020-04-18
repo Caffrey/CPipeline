@@ -1,9 +1,21 @@
-﻿using Unity.Collections;
+﻿using System.Collections.Generic;
+using Unity.Collections;
+
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace CPipeline.Runtime
 {
+
+    public struct ShadowLightData
+    {
+        int lightIndex;
+        public  ShadowLightData(int lightIndex)
+        {
+            this.lightIndex = lightIndex;
+        }
+
+    }
     public class CLightData 
     {
         public static int MAX_REALTIME_LIGHT_COUNT = 64;
@@ -14,9 +26,16 @@ namespace CPipeline.Runtime
 
         CommandBuffer lightCmd;
 
+        CShadowPass m_ShadowPass;
+
+
+        List<ShadowLightData> lightShadowDatas;
+
         public CLightData()
         {
             lightCmd = new CommandBuffer();
+            m_ShadowPass = new CShadowPass();
+            lightShadowDatas = new List<ShadowLightData>();
         }
 
         void SetupShadow(Light light, ref CullingResults cullResults,ref CShadowSetting shadowSetting,int visibleLightIndex)
@@ -26,13 +45,12 @@ namespace CPipeline.Runtime
                 && cullResults.GetShadowCasterBounds(visibleLightIndex,out Bounds b)
                 )
             {
-
+                lightShadowDatas.Add(new ShadowLightData(visibleLightIndex));
             }
         }
 
         public void setupLight(ScriptableRenderContext context, ref CullingResults cullResults, ref CShadowSetting shadowSetting)
         {
-
             NativeArray<VisibleLight> lights = cullResults.visibleLights;
             int lightCount = lights.Length;
             
@@ -76,10 +94,7 @@ namespace CPipeline.Runtime
                         attenuation.w = -cosOuter * attenuation.z;
                     }
                 }
-
-
                 lightAttenuation[i] = attenuation;
-
             }
 
             lightCmd.SetGlobalInt(ShaderProperty.VISIBLE_LIGHT_COUNT, lightCount);
@@ -89,9 +104,18 @@ namespace CPipeline.Runtime
             lightCmd.SetGlobalVectorArray(ShaderProperty.VISIBLE_LIGHT_SPOT_DIRECTION, lightSportDirection);
             
             context.ExecuteCommandBuffer(lightCmd);
-            lightCmd.Clear();
+            lightCmd.Clear(); 
         }
 
+        public void RenderShadow(ref RenderingData context)
+        {
+            m_ShadowPass.Render(ref context); 
+        }
+
+        public void Cleanup(ref RenderingData context)
+        {
+            m_ShadowPass.CleanUp(ref context);
+        }
 
     }
 }

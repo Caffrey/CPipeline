@@ -15,7 +15,7 @@
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
+            // make fog work 
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
@@ -165,5 +165,18 @@
             }
             ENDHLSL
         }
+
+        // Pass
+        // {
+        //     Tags{"LightMode" = "ShadowCaster"}
+        //     ColorMask 0 
+
+        //     HLSLPROGRAM
+        //     #pragma target 3.5
+        //     #pragma vertex ShadowCasterPassVertex
+        //     #pragma fragment ShadowCasterPassFragment
+        //     #include "ShadowCasterPass.hlsl"
+        //     ENDHLSL
+        // }
     }
 }
