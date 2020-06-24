@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db6f4f31fe335244fa3ee14d3f7b73e3, type: 3}
   m_Name: New Deffered Pipeline Assets
   m_EditorClassIdentifier: 
-  debugMode: 2
+  debugMode: 0

@@ -23,7 +23,7 @@ namespace UnityEngine.Rendering.Deffered
 
                 if(light.lightType == LightType.Directional)
                 {
-                    LD = light.light.transform.forward;
+                    LD = -light.light.transform.forward;
                     LD.w = 1;
                 }
                 else
@@ -37,9 +37,10 @@ namespace UnityEngine.Rendering.Deffered
 
                 cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, lightPassMaterial);
                 context.ExecuteCommandBuffer(cmd);
+                cmd.Clear();
             }
             cmd.EndSample("LightingPass");
-            context.ExecuteCommandBuffer(cmd);
+
         }
 
     }

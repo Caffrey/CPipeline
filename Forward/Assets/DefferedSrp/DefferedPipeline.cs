@@ -106,12 +106,13 @@ namespace UnityEngine.Rendering.Deffered
 
         OpaeuePass opaquePass;
         GbufferPass gBufferPass;
+        LighttingPass lightPass;
 
         public DefferedPipeline(DefferedPipelineAssets asset)
         {
             mAssets = asset;
             cmd = new CommandBuffer();
-
+            cmd.name = "deferred";
             copyColorMaterial = new Material(Shader.Find("Hidden/copyColor"))
             {
                 hideFlags = HideFlags.HideAndDontSave
@@ -124,6 +125,7 @@ namespace UnityEngine.Rendering.Deffered
         {
             opaquePass = new OpaeuePass();
             gBufferPass = new GbufferPass();
+            lightPass = new LighttingPass();
         }
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
@@ -149,14 +151,14 @@ namespace UnityEngine.Rendering.Deffered
 
             //Setup GBuffer To RenderTarget
             SetupGBuffer(cmd, context);
-            context.DrawSkybox(camera);
-
+             
             //Rendering Opaque Pass
             gBufferPass.Render(ref cullResult, ref context, cmd, camera);
 
+            context.DrawSkybox(camera);
 
             //Rendering Opauqe LightingPass
-            RenderingOpaqueLighting(cmd, context);
+            RenderingOpaqueLighting(cmd, context,ref cullResult);
            
 #if UNITY_EDITOR
             if (camera.cameraType == CameraType.SceneView)
@@ -212,14 +214,18 @@ namespace UnityEngine.Rendering.Deffered
             context.ExecuteCommandBuffer(cmd);
         }
 
-        void RenderingOpaqueLighting(CommandBuffer cmd, ScriptableRenderContext context)
+        void RenderingOpaqueLighting(CommandBuffer cmd, ScriptableRenderContext context,ref CullingResults cullResult)
         {
             SetupDebugMode();
             cmd.Clear();
             cmd.BeginSample("Opaque Lighting");
 
             RenderTextureManager.instance.SetupGbufferToShader(cmd);
-            cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
+
+            cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget);
+
+            lightPass.Execute(context, cmd,ref cullResult);
+            //cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
             cmd.EndSample("Opaque Lighting");
             context.ExecuteCommandBuffer(cmd);
         }

@@ -1,20 +1,18 @@
-﻿Shader "Hidden/copyColor"
+﻿Shader "Hidden/LightPass"
 {
+
     SubShader
     {
         // No culling or depth
         Cull Off ZWrite Off ZTest Always
-
+        Blend One One
         Pass
         {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma shader_feature __ _DEBUG_Normal _DEBUG_DEPTH _DEBUG_DEPTH01 _DEBUG_DEPTH_EYE
 
             #include "UnityCG.cginc"
-
-
 
             struct appdata
             {
@@ -34,38 +32,24 @@
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
                 return o;
-            } 
+            }
 
-            sampler2D _MainTex;
             sampler2D _GAlbedo;
             sampler2D _GNormal;
             sampler2D _GDepth;
 
+            float4 _LightDireciton;
+            half4 _LightColor;
+
             fixed4 frag(v2f i) : SV_Target
             {
-                    fixed4 col = col = tex2D(_MainTex, i.uv);
-           
-#if _DEBUG_Normal  
-                    col = tex2D(_GNormal, i.uv); 
-#endif
+                float4 albedo = tex2D(_GAlbedo,i.uv);
+                float4 normal = tex2D(_GNormal,i.uv);
+                float diffuse = max(0,dot(_LightDireciton.xyz, normal.xyz));
+                float depth = tex2D(_GDepth, i.uv);
+                 
 
-#if _DEBUG_DEPTH
-                    col = tex2D(_GDepth, i.uv);
-#endif
-
-#if _DEBUG_DEPTH01
-                    col = tex2D(_GDepth, i.uv);
-                    float depth = Linear01Depth(col.r);
-                    col = float4(depth, depth, depth, 1);
-#endif
-
-#if _DEBUG_DEPTH_EYE
-                    col = tex2D(_GDepth, i.uv);
-                    float depth = LinearEyeDepth(col.r);
-                    col = float4(depth, depth, depth, 1);
-#endif
-                   
-                return col;
+                return diffuse * _LightColor * albedo + albedo * (1- depth);
             }
             ENDCG
         }

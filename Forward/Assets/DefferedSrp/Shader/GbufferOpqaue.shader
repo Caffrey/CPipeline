@@ -47,7 +47,7 @@
         {
             RTStruct o;
             o.albedo = tex2D(_MainTex, i.uv) * _Color;
-            o.normal = half4(i.normal, 1);
+            o.normal = half4(i.normal, 0);
             return o;
         }
 
