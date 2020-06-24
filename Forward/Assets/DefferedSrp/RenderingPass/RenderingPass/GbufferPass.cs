@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-
+ 
 
 namespace UnityEngine.Rendering.Deffered
 {
-    public class GbufferPass
+    public class GbufferPass 
     { 
         static ShaderTagId[] unlitShaderTagId = {
             new ShaderTagId("GBuffer"),
@@ -14,13 +14,14 @@ namespace UnityEngine.Rendering.Deffered
 
         public void SetupMRT(CommandBuffer cmd, RenderTextureManager rtmanager, ScriptableRenderContext context)
         {
-            cmd.Clear();
             cmd.BeginSample("Setup MRT");
 
+            RenderTexture tex = null;
 
-            cmd.SetRenderTarget(rtmanager.ColorBuffer.colorBuffer, rtmanager.DepthBuffer.depth, 1);
-
-            context.ExecuteCommandBuffer(cmd);
+            RenderTargetIdentifier[] rts = new RenderTargetIdentifier[2];
+            rts[0] = rtmanager.ColorBuffer;
+            rts[1] = rtmanager.NormalBuffer;
+            cmd.SetRenderTarget(rts,rtmanager.DepthBuffer);
 
             cmd.EndSample("Setup MRT");
         }
@@ -35,9 +36,9 @@ namespace UnityEngine.Rendering.Deffered
 
             DrawingSettings opaqueDrawSetting = new DrawingSettings(unlitShaderTagId[0], opaqueSortSetting)
             {
-                perObjectData = PerObjectData.LightIndices
+                perObjectData = PerObjectData.LightIndices | PerObjectData.LightData
             };
-
+             
             FilteringSettings opaqueFilteringSeting = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(cullResult, ref opaqueDrawSetting, ref opaqueFilteringSeting);
