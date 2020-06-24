@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Light : MonoBehaviour
+namespace UnityEngine.Rendering.Deffered
 {
-    // Start is called before the first frame update
-    void Start()
+    public class Light 
     {
-        
-    }
+        public void LightingSetup(ScriptableRenderContext context, CommandBuffer cmd, ref CullingResults cullResult)
+        {
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        }
     }
 }

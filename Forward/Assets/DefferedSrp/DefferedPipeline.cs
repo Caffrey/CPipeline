@@ -5,9 +5,22 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.Rendering.Deffered
 {
+    
 
     public class RenderTextureManager
     {
+        private static RenderTextureManager _instance;
+        public static RenderTextureManager instance
+        {
+            get {
+                if(_instance == null)
+                {
+                    _instance = new RenderTextureManager();
+                }
+                return _instance;
+            
+            }
+        }
         public int DepthBuffer
         {
             get { return _GDepth; }
@@ -30,6 +43,13 @@ namespace UnityEngine.Rendering.Deffered
         readonly public static RenderTargetIdentifier _GNormal_RT = new RenderTargetIdentifier(_GNormal);
         readonly public static RenderTargetIdentifier _GDepth_RT = new RenderTargetIdentifier(_GDepth);
 
+        public static int _PostProcessingColor = Shader.PropertyToID("_MainColor");
+        public static int _PostProcessingColorSwap = Shader.PropertyToID("_MainColorB");
+        readonly public static RenderTargetIdentifier _PostProcessing_RT = new RenderTargetIdentifier(_PostProcessingColor);
+        readonly public static RenderTargetIdentifier _PostProcessingColorSwap_RT = new RenderTargetIdentifier(_PostProcessingColorSwap);
+
+        public RenderTextureManager() { }
+
         public void GenerateRT(CommandBuffer cmd)
         {
             RenderTextureDescriptor depthDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Depth, 24);
@@ -44,6 +64,21 @@ namespace UnityEngine.Rendering.Deffered
             cmd.GetTemporaryRT(_GAlbedo, colorDesc, FilterMode.Bilinear);
             cmd.GetTemporaryRT(_GNormal, normalDesc, FilterMode.Point);
             cmd.GetTemporaryRT(_GDepth, depthDesc, FilterMode.Point);        
+        }
+
+        public void SetupGBuffer(CommandBuffer cmd)
+        {
+            GenerateRT(cmd);
+            cmd.BeginSample("Setup MRT");
+
+            RenderTexture tex = null;
+
+            RenderTargetIdentifier[] rts = new RenderTargetIdentifier[2];
+            rts[0] = ColorBuffer;
+            rts[1] = NormalBuffer;
+            cmd.SetRenderTarget(rts, DepthBuffer);
+
+            cmd.EndSample("Setup MRT");
         }
 
         public void SetupGbufferToShader(CommandBuffer cmd)
@@ -62,7 +97,6 @@ namespace UnityEngine.Rendering.Deffered
         }
     }
 
-
     public class DefferedPipeline : RenderPipeline 
     {
         private CommandBuffer cmd;
@@ -72,15 +106,11 @@ namespace UnityEngine.Rendering.Deffered
 
         OpaeuePass opaquePass;
         GbufferPass gBufferPass;
-        RenderTextureManager mRTManager;
 
         public DefferedPipeline(DefferedPipelineAssets asset)
         {
             mAssets = asset;
             cmd = new CommandBuffer();
-            cmd.name = "Deffered";
-            mRTManager = new RenderTextureManager();
-
 
             copyColorMaterial = new Material(Shader.Find("Hidden/copyColor"))
             {
@@ -96,16 +126,12 @@ namespace UnityEngine.Rendering.Deffered
             gBufferPass = new GbufferPass();
         }
 
-
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
             BeginFrameRendering(context, cameras);
             foreach(var camera in cameras)
             {
-
                 BeginCameraRendering(context, camera);
-                 
-
                 DrawCamera(context, camera);
                 EndCameraRendering(context, camera);
             }
@@ -121,50 +147,24 @@ namespace UnityEngine.Rendering.Deffered
             CullingResults cullResult = context.Cull(ref cullingParams);
             context.SetupCameraProperties(camera, false);
 
-            //setup mrt
-            CommandBuffer cmd1 = new CommandBuffer() { name = "mrt" };
-
-            mRTManager.GenerateRT(cmd1);
-            gBufferPass.SetupMRT(cmd1, mRTManager,context);
-            cmd1.ClearRenderTarget(true, true, Color.black);
-            context.ExecuteCommandBuffer(cmd1);
-            cmd1.Release();
-
+            //Setup GBuffer To RenderTarget
+            SetupGBuffer(cmd, context);
             context.DrawSkybox(camera);
 
-
+            //Rendering Opaque Pass
             gBufferPass.Render(ref cullResult, ref context, cmd, camera);
 
 
-            CommandBuffer cmd2 = new CommandBuffer() { name = "setbuffer" }; 
-            mRTManager.SetupGbufferToShader(cmd2);
-            context.ExecuteCommandBuffer(cmd2);
-            cmd2.Release();
-            //opaquePass.Render(ref cullResult, ref context, cmd, camera);
-
-            CommandBuffer cmd3 = new CommandBuffer() { name = "blit" };
-            cmd3.Clear();
-            cmd3.BeginSample("Final Blit");
-
-            SetupDebugMode();
-
-            cmd3.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
-            cmd3.EndSample("Final Blit");
-            context.ExecuteCommandBuffer(cmd3);
-            cmd3.Release();
-
-
-
+            //Rendering Opauqe LightingPass
+            RenderingOpaqueLighting(cmd, context);
+           
 #if UNITY_EDITOR
             if (camera.cameraType == CameraType.SceneView)
             {
                 context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
             }
 #endif
-            CommandBuffer cmd4 = new CommandBuffer() { name = "release" };
-            mRTManager.ReleaseRT(cmd4);
-            context.ExecuteCommandBuffer(cmd4);
-            cmd4.Release();
+            CameraFrameEnd(cmd, context);
             context.Submit();
         }
 
@@ -195,7 +195,36 @@ namespace UnityEngine.Rendering.Deffered
             }
         }
 
+        void SetupGBuffer(CommandBuffer cmd, ScriptableRenderContext context)
+        {
+            cmd.Clear();
+            cmd.BeginSample("Setup GBuffer");
+            RenderTextureManager.instance.SetupGBuffer(cmd);
+            cmd.ClearRenderTarget(true, true, Color.black);
+            cmd.EndSample("Setup GBuffer");
+            context.ExecuteCommandBuffer(cmd);
+        }
+
+        void CameraFrameEnd(CommandBuffer cmd, ScriptableRenderContext context)
+        {
+            cmd.Clear();
+            RenderTextureManager.instance.ReleaseRT(cmd);
+            context.ExecuteCommandBuffer(cmd);
+        }
+
+        void RenderingOpaqueLighting(CommandBuffer cmd, ScriptableRenderContext context)
+        {
+            SetupDebugMode();
+            cmd.Clear();
+            cmd.BeginSample("Opaque Lighting");
+
+            RenderTextureManager.instance.SetupGbufferToShader(cmd);
+            cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
+            cmd.EndSample("Opaque Lighting");
+            context.ExecuteCommandBuffer(cmd);
+        }
 
     }
+
 
 }
