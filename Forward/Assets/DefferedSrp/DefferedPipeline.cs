@@ -37,18 +37,36 @@ namespace UnityEngine.Rendering.Deffered
 
         }
         public void GenerateRT()
-        { 
-            _DepthBuffer = RenderTexture.GetTemporary(Screen.width, Screen.height, 24, RenderTextureFormat.Depth, RenderTextureReadWrite.Linear);
-            _ColorBuffer = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Default);
-            _NormalBuffer = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear);
-            _DepthColorBuffer = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.RHalf, RenderTextureReadWrite.Linear);
+        {
+            RenderTextureDescriptor depthDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Depth, 24);
+            RenderTextureDescriptor colorDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 24);
+            RenderTextureDescriptor normalDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 0);
+            RenderTextureDescriptor DepthColorDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 0);
+            depthDesc.sRGB = false;
+            normalDesc.sRGB = false;
+            DepthColorDesc.sRGB = false;
+            depthDesc.dimension = colorDesc.dimension = normalDesc.dimension = DepthColorDesc.dimension = TextureDimension.Tex2D;
+
+
+            _DepthBuffer = RenderTexture.GetTemporary(depthDesc);
+            _ColorBuffer = RenderTexture.GetTemporary(colorDesc);
+            _NormalBuffer = RenderTexture.GetTemporary(normalDesc);
+            _DepthColorBuffer = RenderTexture.GetTemporary(DepthColorDesc);
         }
         public void ReleaseRT()
         {
-            RenderTexture.ReleaseTemporary(_DepthBuffer);
-            RenderTexture.ReleaseTemporary(_ColorBuffer);
-            RenderTexture.ReleaseTemporary(_NormalBuffer);
-            RenderTexture.ReleaseTemporary(_DepthColorBuffer);
+            if(_DepthBuffer)
+            {
+                RenderTexture.ReleaseTemporary(_DepthBuffer);
+                RenderTexture.ReleaseTemporary(_ColorBuffer);
+                RenderTexture.ReleaseTemporary(_NormalBuffer);
+                RenderTexture.ReleaseTemporary(_DepthColorBuffer);
+            }
+            _DepthBuffer = null;
+            _ColorBuffer = null;
+            _NormalBuffer = null;
+            _DepthBuffer = null;
+
         }
 
     }
@@ -89,6 +107,8 @@ namespace UnityEngine.Rendering.Deffered
             {
 
                 BeginCameraRendering(context, camera);
+
+                mRRManager.ReleaseRT();
                 mRRManager.GenerateRT();
                 DrawCamera(context, camera);
                 mRRManager.ReleaseRT();
@@ -109,14 +129,17 @@ namespace UnityEngine.Rendering.Deffered
 
 
             //setup mrt
-           // gBufferPass.SetupMRT(cmd, mRRManager,context);
+            //gBufferPass.SetupMRT(cmd, mRRManager,context);
             gBufferPass.Render(ref cullResult, ref context, cmd, camera);
             //opaquePass.Render(ref cullResult, ref context, cmd, camera);
 
             context.DrawSkybox(camera);
 
 #if UNITY_EDITOR
-            context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
+            if(camera.cameraType == CameraType.SceneView)
+            {
+                context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
+            }
 #endif
 
             context.Submit();

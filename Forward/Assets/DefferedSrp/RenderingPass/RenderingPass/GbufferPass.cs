@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 namespace UnityEngine.Rendering.Deffered
 {
     public class GbufferPass
-    {
+    { 
         static ShaderTagId[] unlitShaderTagId = {
             new ShaderTagId("GBuffer"),
         };
@@ -17,8 +17,8 @@ namespace UnityEngine.Rendering.Deffered
             cmd.Clear();
             cmd.BeginSample("Setup MRT");
 
-            cmd.SetRenderTarget(new RenderTargetIdentifier[] { rtmanager.ColorBuffer, rtmanager.NormalBuffer,rtmanager.DepthColorBuffer }, 
-                rtmanager.DepthBuffer.depthBuffer);
+
+            cmd.SetRenderTarget(rtmanager.ColorBuffer.colorBuffer, rtmanager.DepthBuffer.depth, 1);
 
             context.ExecuteCommandBuffer(cmd);
 

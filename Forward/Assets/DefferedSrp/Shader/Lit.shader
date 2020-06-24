@@ -23,6 +23,9 @@
         sampler2D _MainTex;
         float4 _MainTex_ST;
 
+        float4 gBufferAlbedo:SV_Target0;
+        float4 gBufferNormal:SV_Target1;
+
         v2f vert(appdata v)
         {
             v2f o;
