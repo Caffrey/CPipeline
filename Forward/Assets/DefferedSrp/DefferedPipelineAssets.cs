@@ -19,6 +19,9 @@ namespace UnityEngine.Rendering.Deffered
 
 
         public DebugMode debugMode = DebugMode.None;
+        public bool DrawGizmo = true;
+        public bool IsForward = false;
+        public bool IsHDR = true;
 
         protected override RenderPipeline CreatePipeline()
         {

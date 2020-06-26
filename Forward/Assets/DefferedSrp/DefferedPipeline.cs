@@ -43,32 +43,59 @@ namespace UnityEngine.Rendering.Deffered
         readonly public static RenderTargetIdentifier _GNormal_RT = new RenderTargetIdentifier(_GNormal);
         readonly public static RenderTargetIdentifier _GDepth_RT = new RenderTargetIdentifier(_GDepth);
 
-        public static int _PostProcessingColor = Shader.PropertyToID("_MainColor");
-        public static int _PostProcessingColorSwap = Shader.PropertyToID("_MainColorB");
+        public static int _PostProcessingColor = Shader.PropertyToID("_S");
+        public static int _PostProcessingColorSwap = Shader.PropertyToID("_S2");
         readonly public static RenderTargetIdentifier _PostProcessing_RT = new RenderTargetIdentifier(_PostProcessingColor);
         readonly public static RenderTargetIdentifier _PostProcessingColorSwap_RT = new RenderTargetIdentifier(_PostProcessingColorSwap);
 
         public RenderTextureManager() { }
 
-        public void GenerateRT(CommandBuffer cmd)
+        private RenderTargetIdentifier source;
+        public RenderTargetIdentifier Source
+        {
+            get { return source; }
+        }
+        private RenderTargetIdentifier dest;
+
+        public RenderTargetIdentifier Dest
+        {
+            get { return dest; }
+        }
+        public void Swap()
+        {
+            var temp = source;
+            source = dest;
+            dest = temp;
+        }
+
+        public void GenerateRT(CommandBuffer cmd,bool IsHDR)
         {
             RenderTextureDescriptor depthDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Depth, 24);
-            RenderTextureDescriptor colorDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 0);
+            RenderTextureDescriptor colorDesc = new RenderTextureDescriptor(Screen.width, Screen.height, IsHDR ? RenderTextureFormat.ARGBHalf: RenderTextureFormat.ARGB32, 0);
             RenderTextureDescriptor normalDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 0);
             RenderTextureDescriptor DepthColorDesc = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.ARGBHalf, 0);
             depthDesc.sRGB = false;
             normalDesc.sRGB = false;
             DepthColorDesc.sRGB = false;
+            colorDesc.sRGB = !IsHDR;
+
             depthDesc.dimension = colorDesc.dimension = normalDesc.dimension = DepthColorDesc.dimension = TextureDimension.Tex2D;
 
             cmd.GetTemporaryRT(_GAlbedo, colorDesc, FilterMode.Bilinear);
             cmd.GetTemporaryRT(_GNormal, normalDesc, FilterMode.Point);
-            cmd.GetTemporaryRT(_GDepth, depthDesc, FilterMode.Point);        
+            cmd.GetTemporaryRT(_GDepth, depthDesc, FilterMode.Point);
+
+
+
+            cmd.GetTemporaryRT(_PostProcessingColor, colorDesc, FilterMode.Bilinear);
+            cmd.GetTemporaryRT(_PostProcessingColorSwap, colorDesc, FilterMode.Bilinear);
+            source = _PostProcessingColor;
+            dest = _PostProcessingColorSwap;
         }
 
-        public void SetupGBuffer(CommandBuffer cmd)
+        public void SetupGBuffer(CommandBuffer cmd,bool IsHDR)
         {
-            GenerateRT(cmd);
+            GenerateRT(cmd, IsHDR);
             cmd.BeginSample("Setup MRT");
 
             RenderTexture tex = null;
@@ -94,6 +121,8 @@ namespace UnityEngine.Rendering.Deffered
             cmd.ReleaseTemporaryRT(_GAlbedo);
             cmd.ReleaseTemporaryRT(_GNormal);
             cmd.ReleaseTemporaryRT(_GDepth);
+            cmd.ReleaseTemporaryRT(_PostProcessingColor);
+            cmd.ReleaseTemporaryRT(_PostProcessingColorSwap);
         }
     }
 
@@ -139,7 +168,7 @@ namespace UnityEngine.Rendering.Deffered
             }
             EndFrameRendering(context, cameras);
         }
-
+         
         void DrawCamera(ScriptableRenderContext context, Camera camera)
         {
 
@@ -148,25 +177,53 @@ namespace UnityEngine.Rendering.Deffered
             camera.TryGetCullingParameters(out cullingParams);
             CullingResults cullResult = context.Cull(ref cullingParams);
             context.SetupCameraProperties(camera, false);
+            camera.allowHDR = mAssets.IsHDR;
 
-            //Setup GBuffer To RenderTarget
-            SetupGBuffer(cmd, context);
-             
-            //Rendering Opaque Pass
-            gBufferPass.Render(ref cullResult, ref context, cmd, camera);
 
-            context.DrawSkybox(camera);
-
-            //Rendering Opauqe LightingPass
-            RenderingOpaqueLighting(cmd, context,ref cullResult);
-           
-#if UNITY_EDITOR
-            if (camera.cameraType == CameraType.SceneView)
+            if (!mAssets.IsForward)
             {
-                context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
-            }
+                //Setup GBuffer To RenderTarget
+                SetupGBuffer(cmd, context);
+
+                //Rendering Opaque Pass
+                gBufferPass.Render(ref cullResult, ref context, cmd, camera);
+
+
+
+                //Rendering Opauqe LightingPass
+
+                RenderingOpaqueLighting(cmd, context, ref cullResult);
+                cmd.SetRenderTarget(RenderTextureManager.instance.Source, RenderTextureManager.instance.DepthBuffer);
+
+                context.DrawSkybox(camera);
+
+                cmd.Clear();
+                
+                cmd.Blit(RenderTextureManager.instance.Source, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
+                context.ExecuteCommandBuffer(cmd);
+#if UNITY_EDITOR
+                if (camera.cameraType == CameraType.SceneView && mAssets.DrawGizmo)
+                {
+                    context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
+                }
 #endif
-            CameraFrameEnd(cmd, context);
+                CameraFrameEnd(cmd, context);
+            }
+            else
+            {
+
+#if UNITY_EDITOR
+                if (camera.cameraType == CameraType.SceneView && mAssets.DrawGizmo)
+                {
+                    context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
+                }
+#endif
+                
+                opaquePass.Render(ref cullResult,ref context, cmd, camera);
+                context.DrawSkybox(camera);
+            }
+            
+
             context.Submit();
         }
 
@@ -201,7 +258,7 @@ namespace UnityEngine.Rendering.Deffered
         {
             cmd.Clear();
             cmd.BeginSample("Setup GBuffer");
-            RenderTextureManager.instance.SetupGBuffer(cmd);
+            RenderTextureManager.instance.SetupGBuffer(cmd,mAssets.IsHDR);
             cmd.ClearRenderTarget(true, true, Color.black);
             cmd.EndSample("Setup GBuffer");
             context.ExecuteCommandBuffer(cmd);
@@ -222,10 +279,10 @@ namespace UnityEngine.Rendering.Deffered
 
             RenderTextureManager.instance.SetupGbufferToShader(cmd);
 
-            cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget);
-
+            //cmd.SetRenderTarget(RenderTextureManager.instance.Source);
+            //cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget, RenderTextureManager.instance.DepthBuffer);
             lightPass.Execute(context, cmd,ref cullResult);
-            //cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
+            
             cmd.EndSample("Opaque Lighting");
             context.ExecuteCommandBuffer(cmd);
         }

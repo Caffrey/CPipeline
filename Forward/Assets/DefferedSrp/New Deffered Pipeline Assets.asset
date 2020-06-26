@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: New Deffered Pipeline Assets
   m_EditorClassIdentifier: 
   debugMode: 0
+  DrawGizmo: 1
+  IsForward: 0
+  IsHDR: 0

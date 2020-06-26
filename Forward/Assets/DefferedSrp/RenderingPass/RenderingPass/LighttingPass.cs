@@ -35,8 +35,13 @@ namespace UnityEngine.Rendering.Deffered
                 cmd.SetGlobalVector("_LightDireciton", LD);
                 cmd.SetGlobalVector("_LightColor", light.finalColor);
 
-                cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, lightPassMaterial);
+
+                cmd.Blit(RenderTextureManager.instance.Source, RenderTextureManager.instance.Dest, lightPassMaterial);
+                
+                //cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, lightPassMaterial);
                 context.ExecuteCommandBuffer(cmd);
+                
+                RenderTextureManager.instance.Swap();
                 cmd.Clear();
             }
             cmd.EndSample("LightingPass");
