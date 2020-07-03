@@ -180,6 +180,7 @@ namespace UnityEngine.Rendering.Deffered
             camera.allowHDR = mAssets.IsHDR;
 
 
+
             if (!mAssets.IsForward)
             {
                 //Setup GBuffer To RenderTarget
@@ -188,18 +189,14 @@ namespace UnityEngine.Rendering.Deffered
                 //Rendering Opaque Pass
                 gBufferPass.Render(ref cullResult, ref context, cmd, camera);
 
-
-
                 //Rendering Opauqe LightingPass
-
+                
                 RenderingOpaqueLighting(cmd, context, ref cullResult);
-                cmd.SetRenderTarget(RenderTextureManager.instance.Source, RenderTextureManager.instance.DepthBuffer);
-
-                context.DrawSkybox(camera);
+                cmd.SetRenderTarget(RenderTextureManager.instance.Source, new RenderTargetIdentifier(RenderTextureManager.instance.DepthBuffer));
 
                 cmd.Clear();
                 
-                cmd.Blit(RenderTextureManager.instance.Source, BuiltinRenderTextureType.CameraTarget, copyColorMaterial);
+                cmd.Blit(RenderTextureManager.instance.Source, BuiltinRenderTextureType.CameraTarget);
                 context.ExecuteCommandBuffer(cmd);
 #if UNITY_EDITOR
                 if (camera.cameraType == CameraType.SceneView && mAssets.DrawGizmo)
@@ -221,6 +218,8 @@ namespace UnityEngine.Rendering.Deffered
                 
                 opaquePass.Render(ref cullResult,ref context, cmd, camera);
                 context.DrawSkybox(camera);
+
+
             }
             
 
