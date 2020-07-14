@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{9fdd4f4d-ae8c-4fb2-bea2-b993af9b3985}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Vector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ortho_basis.cpp" />
+    <ClCompile Include="Random.cpp" />
+    <ClCompile Include="Image.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Color.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="ortho_basis.h" />
+    <ClInclude Include="DynamicArray.h" />
+    <ClInclude Include="Random.h" />
+    <ClInclude Include="Image.h" />
+  </ItemGroup>
+</Project>
