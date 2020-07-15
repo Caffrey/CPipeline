@@ -13,6 +13,8 @@
     <ClCompile Include="ortho_basis.cpp" />
     <ClCompile Include="Random.cpp" />
     <ClCompile Include="Image.cpp" />
+    <ClCompile Include="Ray.cpp" />
+    <ClCompile Include="Shape.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Color.h">
@@ -26,5 +28,7 @@
     <ClInclude Include="DynamicArray.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="Ray.h" />
+    <ClInclude Include="Shape.h" />
   </ItemGroup>
 </Project>
