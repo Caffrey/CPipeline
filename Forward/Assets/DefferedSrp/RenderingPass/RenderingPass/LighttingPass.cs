@@ -30,6 +30,7 @@ namespace UnityEngine.Rendering.Deffered
         {
             cmd.Clear();
             cmd.BeginSample("LightingPass");
+
             foreach(var light in cullResult.visibleLights)
             {
                 Vector4 LD = light.light.transform.forward;
@@ -51,7 +52,8 @@ namespace UnityEngine.Rendering.Deffered
                 if(light.lightType == LightType.Point)
                 {
                     Matrix4x4 trans = Matrix4x4.identity;
-                    Matrix4x4.Translate(light.light.transform.position);
+                    trans *= Matrix4x4.Translate(light.light.transform.position);
+                    trans *= Matrix4x4.Scale(Vector3.one * light.light.range);
                     pointLightMaterial.SetColor("_PointLightColor",light.light.color);
                     pointLightMaterial.SetFloat("_PointLightRadius", light.light.range);
                     cmd.DrawMesh(PointLightShape, trans, pointLightMaterial);
@@ -64,7 +66,7 @@ namespace UnityEngine.Rendering.Deffered
                 //cmd.Blit(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, lightPassMaterial);
                 context.ExecuteCommandBuffer(cmd);
                 
-                RenderTextureManager.instance.Swap();
+                //RenderTextureManager.instance.Swap();
                 cmd.Clear();
             }
             cmd.EndSample("LightingPass");
