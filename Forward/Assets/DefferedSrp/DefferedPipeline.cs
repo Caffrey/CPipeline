@@ -90,7 +90,7 @@ namespace UnityEngine.Rendering.Deffered
             cmd.GetTemporaryRT(_PostProcessingColor, colorDesc, FilterMode.Bilinear);
             cmd.GetTemporaryRT(_PostProcessingColorSwap, colorDesc, FilterMode.Bilinear);
             source = _PostProcessingColor;
-            dest = _PostProcessingColorSwap;
+            dest = _PostProcessingColorSwap; 
         }
 
         public void SetupGBuffer(CommandBuffer cmd,bool IsHDR)
@@ -190,9 +190,12 @@ namespace UnityEngine.Rendering.Deffered
                 gBufferPass.Render(ref cullResult, ref context, cmd, camera);
 
                 //Rendering Opauqe LightingPass
-                
-                RenderingOpaqueLighting(cmd, context, ref cullResult);
+                cmd.Clear();
                 cmd.SetRenderTarget(RenderTextureManager.instance.Source, new RenderTargetIdentifier(RenderTextureManager.instance.DepthBuffer));
+                context.ExecuteCommandBuffer(cmd);
+
+                RenderingOpaqueLighting(cmd, context, ref cullResult);
+                
 
                 cmd.Clear();
                 
