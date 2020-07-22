@@ -143,6 +143,7 @@
     <ClCompile Include="ortho_basis.cpp" />
     <ClCompile Include="Random.cpp" />
     <ClCompile Include="Ray.cpp" />
+    <ClCompile Include="Sample.cpp" />
     <ClCompile Include="Shape.cpp" />
     <ClCompile Include="Vector.cpp" />
   </ItemGroup>
@@ -154,6 +155,7 @@
     <ClInclude Include="ortho_basis.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="Ray.h" />
+    <ClInclude Include="Sample.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>

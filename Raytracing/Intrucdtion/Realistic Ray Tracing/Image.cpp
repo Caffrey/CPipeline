@@ -83,6 +83,21 @@ void Image::writePPM(std::ostream& out)
 		}
 }
 
+void Image::writePPM2(std::ostream& out)
+{
+	cout << "P3\n" << nx << ' ' << ny << "\n255\n";
+
+	for (int j = ny - 1; j >= 0; --j) {
+		for (int i = 0; i < nx; ++i) {
+			auto r = (unsigned int)(256 * raster[j][i].r());
+			auto g = (unsigned int)(256 * raster[j][i].g());
+			auto b = (unsigned int)(256 * raster[j][i].b());
+
+			cout << r << ' ' << g << ' ' << b << '\n';
+		}
+	}
+}
+
 void Image::readPPM(string file_name)
 {
 	ifstream in;

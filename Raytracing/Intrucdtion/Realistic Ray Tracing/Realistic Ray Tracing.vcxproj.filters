@@ -15,6 +15,7 @@
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="Sample.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Color.h">
@@ -30,5 +31,6 @@
     <ClInclude Include="Image.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Shape.h" />
+    <ClInclude Include="Sample.h" />
   </ItemGroup>
 </Project>

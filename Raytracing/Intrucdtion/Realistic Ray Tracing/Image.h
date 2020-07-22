@@ -16,6 +16,7 @@ public:
 	bool set(int x, int y, const Color& color);
 	void GammaCorrect(float gamma);
 	void writePPM(std::ostream& out);
+	void writePPM2(std::ostream& out);
 	void readPPM(std::string file_name);
 private:
 

@@ -4,7 +4,7 @@ Triangle::Triangle(const Vector& _p0, const Vector& _p1, const Vector& _p2, cons
 	p0(_p0), p1(_p1), p2(_p2), color(_color) {}
 
 
-bool Triangle::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecord& record) const
+bool Triangle::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, HitRecord& record) const
 {
 	RFLOAT tval;
 	RFLOAT A = p0.x() - p1.x();
@@ -51,7 +51,7 @@ bool Triangle::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecor
 
 }
 
-bool Triangle::shadowHit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecord& record) const
+bool Triangle::shadowHit(const Ray& r, RFLOAT tmin, RFLOAT tmax, HitRecord& record) const
 {
 	RFLOAT tval;
 	RFLOAT A = p0.x() - p1.x();
@@ -98,7 +98,7 @@ Sphere::Sphere(const Vector& _center, RFLOAT _radius, const Color& _color):
 	center(_center),radius(_radius),color(_color){}
 
 
-bool Sphere::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecord& record) const
+bool Sphere::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, HitRecord& record) const
 {
 	Vector temp = r.Origin() - center;
 	double a = dot(r.Direction(), r.Direction());
@@ -126,7 +126,7 @@ bool Sphere::hit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecord&
 	return true;
 }
 
-bool Sphere::shadowHit(const Ray& r, RFLOAT tmin, RFLOAT tmax, RFLOAT time, HitRecord& record) const
+bool Sphere::shadowHit(const Ray& r, RFLOAT tmin, RFLOAT tmax, HitRecord& record) const
 {
 	Vector temp = r.Origin() - center;
 
