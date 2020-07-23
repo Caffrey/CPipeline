@@ -1,9 +1,7 @@
 #pragma once
 
-#include <cmath>
 #include <string>
 #include <fstream>
-
 class Color;
 
 class Image

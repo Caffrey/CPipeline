@@ -6,10 +6,10 @@
 #define V data[1]
 #define W data[2]
 
-void c_ortho_basis::init_from_u(const Vector& u)
+void ONB::init_from_u(const Vector3& u)
 {
-	Vector n(1.0f, 0.0f, 0.0f);
-	Vector m(0.0f, 1.0f, 0.0f);
+	Vector3 n(1.0f, 0.0f, 0.0f);
+	Vector3 m(0.0f, 1.0f, 0.0f);
 
 	U = normalize(u);
 	V = cross(U, n);
@@ -18,10 +18,10 @@ void c_ortho_basis::init_from_u(const Vector& u)
 	W = cross(U, V);
 }
 
-void c_ortho_basis::init_from_v(const Vector& v)
+void ONB::init_from_v(const Vector3& v)
 {
-	Vector n(1.0f, 0.0f, 0.0f);
-	Vector m(0.0f, 1.0f, 0.0f);
+	Vector3 n(1.0f, 0.0f, 0.0f);
+	Vector3 m(0.0f, 1.0f, 0.0f);
 
 	V = normalize(v);
 	U = cross(V, n);
@@ -30,10 +30,10 @@ void c_ortho_basis::init_from_v(const Vector& v)
 	W = cross(U, V);
 }
 
-void c_ortho_basis::init_from_w(const Vector& w)
+void ONB::init_from_w(const Vector3& w)
 {
-	Vector n(1.0f, 0.0f, 0.0f);
-	Vector m(0.0f, 1.0f, 0.0f);
+	Vector3 n(1.0f, 0.0f, 0.0f);
+	Vector3 m(0.0f, 1.0f, 0.0f);
 
 	W = normalize(w);
 	U = cross(W, n);
@@ -42,42 +42,42 @@ void c_ortho_basis::init_from_w(const Vector& w)
 	V = cross(W, U);
 }
 
-void c_ortho_basis::init_from_uv(const Vector& u, const Vector& v)
+void ONB::init_from_uv(const Vector3& u, const Vector3& v)
 {
 	U = normalize(u);
 	W = normalize(cross(u, v));
 	V = cross(W, U);
 }
 
-void c_ortho_basis::init_from_vu(const Vector& v, const Vector& u)
+void ONB::init_from_vu(const Vector3& v, const Vector3& u)
 {
 	V = normalize(v);
 	W = normalize(cross(u, v));
 	U = cross(V, W);
 }
 
-void c_ortho_basis::init_from_uw(const Vector& u, const Vector& w)
+void ONB::init_from_uw(const Vector3& u, const Vector3& w)
 {
 	U = normalize(u);
 	V = normalize(cross(w, u));
 	W = cross(U, W);
 }
 
-void c_ortho_basis::init_from_wu(const Vector& w, const Vector& u)
+void ONB::init_from_wu(const Vector3& w, const Vector3& u)
 {
 	W = normalize(w);
 	V = normalize(cross(w, u));
 	U = cross(V, W);
 }
 
-void c_ortho_basis::init_from_vw(const Vector& v, const Vector& w)
+void ONB::init_from_vw(const Vector3& v, const Vector3& w)
 {
 	V = normalize(v);
 	U = normalize(cross(v, w));
 	W = cross(U, V);
 }
 
-void c_ortho_basis::init_from_wv(const Vector& w, const Vector& v)
+void ONB::init_from_wv(const Vector3& w, const Vector3& v)
 {
 	W = normalize(w);
 	U = normalize(cross(v, w));

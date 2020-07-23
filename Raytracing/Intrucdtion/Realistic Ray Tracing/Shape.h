@@ -6,7 +6,7 @@
 struct HitRecord
 {
 	float t;
-	Vector normal;
+	Vector3 normal;
 	Color color;
 };
 
@@ -21,11 +21,11 @@ public :
 class Triangle : public Shape
 {
 public:
-	Triangle(const Vector& _p0, const Vector& _p1, const Vector& _p2, const Color& _color);
+	Triangle(const Vector3& _p0, const Vector3& _p1, const Vector3& _p2, const Color& _color);
 	bool hit(const Ray& r, float tmin, float tmax, HitRecord& record) const ;
 	bool shadowHit(const Ray& r, float tmin, float tmax, HitRecord& record) const ;
 
-	Vector p0, p1, p2;
+	Vector3 p0, p1, p2;
 	Color color;
 };
 
@@ -34,12 +34,12 @@ class Sphere :public Shape
 {
 public:
 
-	Sphere(const Vector& _center, float _radius, const Color& _color);
+	Sphere(const Vector3& _center, float _radius, const Color& _color);
 	bool hit(const Ray& r, float tmin, float tmax, HitRecord& record) const;
 	bool shadowHit(const Ray& r, float tmin, float tmax, HitRecord& record) const;
 	//BBox boundingBox() const;
 
-	Vector center;
+	Vector3 center;
 	float radius;
 	Color color;
 };

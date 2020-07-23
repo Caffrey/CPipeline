@@ -5,19 +5,19 @@ class Ray
 {
 public:
 	Ray();
-	Ray(const Vector& a, const Vector& b) {
+	Ray(const Vector3& a, const Vector3& b) {
 		data[0] = a;
 		data[1] = b;
 	}
 	Ray(const Ray& r) { *this = r; }
-	Vector Origin() const { return data[0]; }
-	Vector Direction() const { return data[1]; }
-	Vector potinAtParamter(float t)const
+	Vector3 Origin() const { return data[0]; }
+	Vector3 Direction() const { return data[1]; }
+	Vector3 potinAtParamter(float t)const
 	{
 		return data[0] + t * data[1];
 	}
 	
-	Vector data[2];
+	Vector3 data[2];
 
 };
 

@@ -138,6 +138,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DynSphere.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ortho_basis.cpp" />
@@ -148,9 +150,12 @@
     <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="common_math.h" />
     <ClInclude Include="DynamicArray.h" />
+    <ClInclude Include="DynSphere.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ortho_basis.h" />
     <ClInclude Include="Random.h" />

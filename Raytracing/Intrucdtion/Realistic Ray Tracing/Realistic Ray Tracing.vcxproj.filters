@@ -16,11 +16,10 @@
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="Shape.cpp" />
     <ClCompile Include="Sample.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DynSphere.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Color.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="Vector.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -32,5 +31,11 @@
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="Sample.h" />
+    <ClInclude Include="Color.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="common_math.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="DynSphere.h" />
   </ItemGroup>
 </Project>
