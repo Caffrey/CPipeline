@@ -141,13 +141,19 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DynSphere.cpp" />
     <ClCompile Include="Image.cpp" />
+    <ClCompile Include="ImageTexture.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshTriangle.cpp" />
     <ClCompile Include="ortho_basis.cpp" />
     <ClCompile Include="Random.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="Sample.cpp" />
     <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="SimpleTexture.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -157,12 +163,18 @@
     <ClInclude Include="DynamicArray.h" />
     <ClInclude Include="DynSphere.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="ImageTexture.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshTriangle.h" />
     <ClInclude Include="ortho_basis.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Sample.h" />
     <ClInclude Include="Shape.h" />
+    <ClInclude Include="SimpleTexture.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 #include "Image.h"
 #include "Color.h"
-
+#include <cmath>
 using namespace std;
 
 Image::Image()
@@ -96,6 +96,13 @@ void Image::writePPM2(std::ostream& out)
 			cout << r << ' ' << g << ' ' << b << '\n';
 		}
 	}
+}
+
+Color& Image::GetPixel(int x, int y) const
+{
+	x = clamp(x, 0, nx - 1);
+	y = clamp(y, 0, ny - 1);
+	return raster[x][y];
 }
 
 void Image::readPPM(string file_name)

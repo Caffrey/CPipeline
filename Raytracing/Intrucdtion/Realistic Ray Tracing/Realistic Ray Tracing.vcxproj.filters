@@ -4,6 +4,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{9fdd4f4d-ae8c-4fb2-bea2-b993af9b3985}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\texture">
+      <UniqueIdentifier>{a456c53e-6c21-48d7-9d3f-40ab5cdd7a9e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vector.cpp">
@@ -18,6 +21,18 @@
     <ClCompile Include="Sample.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DynSphere.cpp" />
+    <ClCompile Include="Texture.cpp">
+      <Filter>src\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleTexture.cpp">
+      <Filter>src\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageTexture.cpp">
+      <Filter>src\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshTriangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vector.h">
@@ -37,5 +52,17 @@
     <ClInclude Include="common_math.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DynSphere.h" />
+    <ClInclude Include="Texture.h">
+      <Filter>src\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleTexture.h">
+      <Filter>src\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageTexture.h">
+      <Filter>src\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshTriangle.h" />
   </ItemGroup>
 </Project>

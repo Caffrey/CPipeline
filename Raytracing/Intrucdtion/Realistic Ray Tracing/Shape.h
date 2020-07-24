@@ -2,12 +2,16 @@
 #include "Ray.h"
 #include "Vector.h"
 #include "Color.h"
+#include "Texture.h"
 
 struct HitRecord
 {
 	float t;
 	Vector3 normal;
+	Vector2 uv;
 	Color color;
+	Texture* hit_tex;
+	Vector3 hit_p;
 };
 
 
