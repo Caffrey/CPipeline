@@ -1,0 +1,56 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+#define PI 3.14
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+TextureCube<float4> radianus;
+SamplerState _LinearClamp;
+
+float3 GerRadisuans(float3 normal)
+{
+	float3 irradiance = float3(0,0,0);
+
+	float3 up = float3(0,1,0);
+	float3 right = cross(up,normal);
+	up = cross(normal,right);
+
+	float sampleDelta = 0.025;
+	float nrSamples = 0.0;
+	for(float phi = 0; phi < 2.0 * PI; phi += sampleDelta)
+	{
+		for(float theta = 0.0; theta < 0.5 * PI; theta+= sampleDelta)
+		{
+			float3 tanegtSample = float3(sin(phi) * sin(theta) * -1,cos(theta) * -1,cos(phi) * sin(theta) * -1);
+			float3 sampleVec = tanegtSample.x * right+ tanegtSample.y * up + tanegtSample.z * normal;
+
+			irradiance += radianus.SampleLevel(_LinearClamp,sampleVec,0).rgb * cos(theta) * sin(theta);
+			nrSamples++;
+
+		}
+	}
+
+	irradiance = PI * irradiance * (1.0/float(nrSamples));
+	return irradiance;
+}
+
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{ 
+
+
+	 float3 samplederDirection = float3(0,0,0);
+
+	 float phi = (id.x / 1024.0f)* 2.0 * PI;
+	 float theta = (id.y / 512.0f) * PI;
+
+     samplederDirection.x = sin(phi) * sin(theta) * -1;
+     samplederDirection.y = cos(theta) * -1;
+     samplederDirection.z = cos(phi) * sin(theta) * -1;
+
+    Result[id.xy] = float4(GerRadisuans(samplederDirection),1);
+   // Result[id.xy] = float4(samplederDirection,1);
+}

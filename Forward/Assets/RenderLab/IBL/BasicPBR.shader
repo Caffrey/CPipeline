@@ -12,6 +12,9 @@ Shader "CRenderLab/BasicPBR"
        	[NoScaleOffset] 
        	_AOTex("Ambient Oclussion Map",2D) = "white"{}
 
+       	[NoScaleOffset]
+       	_DiffuseIRadianceTex("Diffuse IRadiance",Cube) = "black"{}
+
 
        	_Tint ("Tint", Color) = (1,1,1,1)
    		_Metallic("Metallic",Range(0,1)) = 1
@@ -44,7 +47,7 @@ Shader "CRenderLab/BasicPBR"
             struct v2f
             {
                
-                float4 vertex : SV_POSITION;
+                float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
                 float2 lightmap_uv : TEXCOORD1;
                 float4 w2t0: TEXCOORD2; 
@@ -56,6 +59,8 @@ Shader "CRenderLab/BasicPBR"
  
             sampler2D _AlbedoTex,_NormalTex,_RoughnessTex,_MetallicTex,_AOTex;
             float4 _AlbedoTex_ST,_Tint;
+
+            samplerCUBE _DiffuseIRadianceTex;
 
              float _Metallic,_Roughness;
             //----------------------PBR
@@ -106,12 +111,19 @@ Shader "CRenderLab/BasicPBR"
 			    return ggx1 * ggx2;
 			}
 
+
+			float3 fresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+			{
+				float3 gloss = float3(1.0 - roughness,1.0 - roughness,1.0 - roughness);
+			    return F0 + ( max(gloss, F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
+			}  
+
             //----------------------PBR
 
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _AlbedoTex);
                 o.lightmap_uv = v.lightmap_uv;
 
@@ -125,7 +137,7 @@ Shader "CRenderLab/BasicPBR"
     			o.w2t2 = float4(worldTangent.z,worldBinormal.z, worldNormal.z, world_pos.z);
 
     			TRANSFER_SHADOW(o);
-               return o;
+               	return o;
             }
 
             float3 PBRLighting(v2f i)
@@ -157,7 +169,7 @@ Shader "CRenderLab/BasicPBR"
             	float HdotV = saturate(dot(WH,WV));
 
             	//Specular
-            	float3 F0 = float3(0.4,0.4,0.4);
+            	float3 F0 = float3(0.4,0.4,0.04);
             	F0 = lerp(F0,Albedo,Metallic);
             	float3 F = fresnelSchlick(HdotV,F0);
             	float NDF = DistributionGGX(WN, WH, Roughness);       
@@ -173,6 +185,13 @@ Shader "CRenderLab/BasicPBR"
 				UNITY_LIGHT_ATTENUATION(atten,i,WPOS);
 				float3 PBRTerm = kD * Albedo  + specular;
 				float3 finalColor = _LightColor0.rgb * PBRTerm * NdotL * atten;
+
+
+
+				//GI
+				float3 KS = fresnelSchlick(NdotV,F0);
+
+				finalColor += texCUBE(_DiffuseIRadianceTex,WN).rgb * Albedo.rgb * ((1-KS) * 1.0 - Metallic);
 
 				return finalColor;
             }	
