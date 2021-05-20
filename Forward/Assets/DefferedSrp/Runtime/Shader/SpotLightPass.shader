@@ -1,50 +1,8 @@
-﻿Shader "Hidden/PointLightPass"
+﻿Shader "Hidden/SpotLightPass"
 {
     SubShader
     {
-      /*  Pass
-        {
-            Stencil
-            {
-                Ref 1
-                Comp always
-                ZFail Replace
-            }
-
-            Cull Front
-            ZTest GEqual
-            Zwrite Off
-            Blend Zero One
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            
-             struct appdata
-            {
-                float4 vertex : POSITION;
-            };
-
-            struct v2f
-            {
-                float4 vertex : SV_POSITION;
-            };
-
-            v2f vert(appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                return o;
-            }
-
-            fixed4 frag(v2f i) :SV_Target
-            {
-                return 0;
-            }
-       
-            ENDCG
-
-        }*/
-
+     
         Pass
         {
             Cull Off
@@ -61,6 +19,7 @@
             struct appdata
             {
                 float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             struct v2f
@@ -75,8 +34,10 @@
             sampler2D _GDepth;
             sampler2D _DefferedDepth;
 
+            float2 lightAttenuation;
             float4 _LightDireciton;
             half4 _LightColor;
+            float4 _SpotLightDirection;
 
             v2f vert (appdata v)
             {
@@ -103,11 +64,17 @@
                 float3 lightDir = _LightDireciton.xyz - wpos;
                 float atten =  saturate(abs(_LightDireciton.w - length(lightDir)) / _LightDireciton.w);
 
+                float SpotLightAngleAtten = dot(lightDir,_SpotLightDirection.xyz);
+                SpotLightAngleAtten = saturate(SpotLightAngleAtten * lightAttenuation.x + lightAttenuation.y);
+                SpotLightAngleAtten *= SpotLightAngleAtten;
+
+
                 normal = normalize(normal);
                 lightDir = normalize(lightDir);
                 float diffuse = max(0, dot(lightDir, normal.xyz));
+                return 1;
                 
-                return  albedo * diffuse * _LightColor *atten;
+                return  albedo * diffuse * _LightColor *atten * SpotLightAngleAtten;
             }
 
             ENDCG

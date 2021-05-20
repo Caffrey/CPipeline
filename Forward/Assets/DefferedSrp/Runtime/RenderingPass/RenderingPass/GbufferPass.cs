@@ -12,20 +12,6 @@ namespace UnityEngine.Rendering.Deffered
             new ShaderTagId("GBuffer"),
         };
 
-        public void SetupMRT(CommandBuffer cmd, RenderTextureManager rtmanager, ScriptableRenderContext context)
-        {
-            cmd.BeginSample("Setup MRT");
-
-            RenderTexture tex = null;
-
-            RenderTargetIdentifier[] rts = new RenderTargetIdentifier[2];
-            rts[0] = rtmanager.ColorBuffer;
-            rts[1] = rtmanager.NormalBuffer;
-            cmd.SetRenderTarget(rts,rtmanager.DepthBuffer);
-
-            cmd.EndSample("Setup MRT");
-        }
-
         public void Render(ref CullingResults cullResult, ref ScriptableRenderContext context, CommandBuffer cmd, Camera camera)
         {
 
@@ -40,7 +26,6 @@ namespace UnityEngine.Rendering.Deffered
             };
              
             FilteringSettings opaqueFilteringSeting = new FilteringSettings(RenderQueueRange.opaque);
-
             context.DrawRenderers(cullResult, ref opaqueDrawSetting, ref opaqueFilteringSeting);
         }
 

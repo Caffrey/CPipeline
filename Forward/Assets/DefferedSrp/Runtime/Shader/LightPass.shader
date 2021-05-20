@@ -48,7 +48,7 @@
                 float diffuse = max(0,dot(_LightDireciton.xyz, normal.xyz)) ;
                 float depth = tex2D(_GDepth, i.uv);
 
-                return diffuse * _LightColor * albedo ;
+                return diffuse *  albedo ;
             }
             ENDCG
         } 

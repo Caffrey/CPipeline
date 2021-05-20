@@ -14,24 +14,21 @@ namespace UnityEngine.Rendering.Deffered
     }
     public class LighttingPass
     {
-        Material lightPassMaterial;
-        public static Mesh PointLightShape;
         public static Mesh SpotLightShape;
-        public Material pointLightMaterial;
-
+        Material pointLightMaterial;
+        Material directionalLightMaterial;
+        Material spotLightMaterial;
         public LighttingPass()
         {
-            lightPassMaterial = new Material(Shader.Find("Hidden/LightPass"));
-            PointLightShape = GameObject.CreatePrimitive(PrimitiveType.Sphere).GetComponent<MeshFilter>().sharedMesh;
+            directionalLightMaterial = new Material(Shader.Find("Hidden/LightPass"));
             pointLightMaterial = new Material(Shader.Find("Hidden/PointLightPass"));
+            spotLightMaterial = new Material(Shader.Find("Hidden/SpotLightPass"));
         }
 
         public void Execute(ScriptableRenderContext context, CommandBuffer cmd, ref CullingResults cullResult)
         {
-            cmd.Clear();
-            cmd.BeginSample("LightingPass");
-
-            foreach(var light in cullResult.visibleLights)
+            cmd.BeginSample("Opaque Lighting");
+            foreach (var light in cullResult.visibleLights)
             {
                 Vector4 LD = light.light.transform.forward;
 
@@ -45,29 +42,51 @@ namespace UnityEngine.Rendering.Deffered
                     LD = light.light.transform.position;
                     LD.w = 0;
                 }
-
-                cmd.SetGlobalVector("_LightDireciton", LD);
-                cmd.SetGlobalVector("_LightColor", light.finalColor);
-
                 if(light.lightType == LightType.Point)
                 {
                     Matrix4x4 trans = Matrix4x4.identity;
                     trans *= Matrix4x4.Translate(light.light.transform.position);
-                    trans *= Matrix4x4.Scale(Vector3.one * light.light.range);
-                    pointLightMaterial.SetColor("_PointLightColor",light.light.color);
-                    pointLightMaterial.SetFloat("_PointLightRadius", light.light.range);
-                    cmd.DrawMesh(PointLightShape, trans, pointLightMaterial);
+                    trans *= Matrix4x4.Scale(Vector3.one * light.light.range);                
+                    LD.w = light.light.range;
+
+                    pointLightMaterial.SetVector("_LightDireciton", LD);
+                    pointLightMaterial.SetColor("_LightColor", light.finalColor);
+                    cmd.DrawMesh(PostProcessUtil.SphereMesh, trans, pointLightMaterial,0,0);
+
+                }
+                else if(light.lightType == LightType.Spot)
+                {
+                    
+                    LD.w = light.light.range;
+                   
+                    float outerRad = Mathf.Deg2Rad * 0.5f * light.spotAngle;
+                    float outerCos = Mathf.Cos(outerRad);
+                    float outerTan = Mathf.Tan(outerRad);
+                    float innerCos = Mathf.Cos(Mathf.Atan(((46f / 64f) * outerTan)));
+                    float angleRange = Mathf.Max(innerCos - outerCos, 0.001f);
+
+                    Vector2 atten = new Vector2();
+                    atten.x = 1f / angleRange;
+                    atten.y = -outerCos * atten.x;
+
+                    spotLightMaterial.SetVector("lightAttenuation", atten);
+                    spotLightMaterial.SetColor("_LightColor", light.finalColor);
+                    spotLightMaterial.SetVector("_LightDireciton", LD);
+                    spotLightMaterial.SetVector("_SpotLightDirection", light.light.transform.localToWorldMatrix.GetColumn(2));
+
+                    cmd.DrawMesh(PostProcessUtil.HemiSphereMeSH, light.localToWorldMatrix, spotLightMaterial, 0, 0);
                 }
                 else
                 {
-                    cmd.DrawMesh(PostProcessUtil.RectangleMesh,Matrix4x4.identity,lightPassMaterial);
-                }
-
-                context.ExecuteCommandBuffer(cmd);
-                
-                cmd.Clear();
+                    directionalLightMaterial.SetVector("_LightDireciton", LD);
+                    directionalLightMaterial.SetVector("_LightColor", light.finalColor);
+                    cmd.DrawMesh(PostProcessUtil.RectangleMesh,Matrix4x4.identity,directionalLightMaterial);
+                }                
             }
-            cmd.EndSample("LightingPass");
+
+            cmd.EndSample("Opaque Lighting");
+            context.ExecuteCommandBuffer(cmd);
+            cmd.Clear();
 
         }
 
